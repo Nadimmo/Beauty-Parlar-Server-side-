@@ -49,8 +49,9 @@ async function run() {
     });
 
     app.get('/customerBooking', async (req, res) => {
-        const booking = req.body;
-        const result = await CollectionOfCustomerBooking.find(booking).toArray();
+        const booking = req.query.email;
+        const filter = {email: booking};
+        const result = await CollectionOfCustomerBooking.find(filter).toArray();
         res.send(result);
     });
 
