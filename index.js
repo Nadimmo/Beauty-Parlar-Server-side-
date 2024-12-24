@@ -23,6 +23,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
     const CollectionOfServices = client.db('BeautyParlarDB').collection('servicesDB');
+    const CollectionOfCustomerBooking = client.db('BeautyParlarDB').collection('customerBookingDB');
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -32,6 +33,7 @@ async function run() {
         const services = await cursor.toArray();
         res.send(services);
     });
+
     app.get('/services/:id', async (req, res) => {
         const id = req.params.id;
         const query = {_id: new ObjectId(id)};
@@ -39,6 +41,25 @@ async function run() {
         res.send(service);
     });
 
+    //customer services related api
+    app.post('/customerBooking', async (req, res) => {
+        const customerBooking = req.body;
+        const result = await CollectionOfCustomerBooking.insertOne(customerBooking);
+        res.send(result);
+    });
+
+    app.get('/customerBooking', async (req, res) => {
+        const booking = req.body;
+        const result = await CollectionOfCustomerBooking.find(booking).toArray();
+        res.send(result);
+    });
+
+    app.get('/customerBooking/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const customerBooking = await CollectionOfCustomerBooking.findOne(query);
+        res.send(customerBooking);
+    });
 
 
     // Send a ping to confirm a successful connection
