@@ -24,6 +24,7 @@ const client = new MongoClient(uri, {
 async function run() {
     const CollectionOfServices = client.db('BeautyParlarDB').collection('servicesDB');
     const CollectionOfCustomerBooking = client.db('BeautyParlarDB').collection('customerBookingDB');
+    const CollectionOfReview = client.db('BeautyParlarDB').collection('reviewDB');
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -61,6 +62,17 @@ async function run() {
         const customerBooking = await CollectionOfCustomerBooking.findOne(query);
         res.send(customerBooking);
     });
+
+    //review related api
+    app.post('/reviews', async (req, res) => {
+        const review = req.body;
+        const result = await CollectionOfReview.insertOne(review);
+        res.send(result);
+    });
+    app.get('/reviews', async (req, res) => {
+        const reviews = await CollectionOfReview.find().toArray();
+        res.send(reviews);
+    })
 
 
     // Send a ping to confirm a successful connection
