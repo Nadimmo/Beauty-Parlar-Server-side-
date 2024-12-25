@@ -29,6 +29,12 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
     //services related api
+    app.post('/services', async(req,res)=>{
+        const service = req.body;
+        const result = await CollectionOfServices.insertOne(service);
+        res.send(result);
+    })
+
     app.get('/services', async (req, res) => {
         const cursor = CollectionOfServices.find({});
         const services = await cursor.toArray();
@@ -49,6 +55,12 @@ async function run() {
         res.send(result);
     });
 
+    app.get('/bookingList', async (req, res) => {
+        const customerBooking = await CollectionOfCustomerBooking.find().toArray();
+        res.send(customerBooking);
+    })
+
+    //show all booking of a customer
     app.get('/customerBooking', async (req, res) => {
         const booking = req.query.email;
         const filter = {email: booking};
