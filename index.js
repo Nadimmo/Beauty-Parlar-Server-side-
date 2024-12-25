@@ -48,6 +48,13 @@ async function run() {
         res.send(service);
     });
 
+    app.delete('/services/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await CollectionOfServices.deleteOne(query);
+        res.send(result);
+    })
+
     //customer services related api
     app.post('/customerBooking', async (req, res) => {
         const customerBooking = req.body;
