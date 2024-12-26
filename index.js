@@ -55,6 +55,21 @@ async function run() {
         res.send(result);
     })
 
+    app.patch('/services/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const updatedService = req.body;
+        const updateDoc = {
+            $set: {
+                title: updatedService.title,
+                price: updatedService.price,
+                description: updatedService.description,
+            },
+        };
+        const result = await CollectionOfServices.updateOne(query, updateDoc);
+        res.send(result);
+    })
+
     //customer services related api
     app.post('/customerBooking', async (req, res) => {
         const customerBooking = req.body;
