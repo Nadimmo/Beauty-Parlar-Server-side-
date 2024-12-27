@@ -112,8 +112,7 @@ async function run() {
     //user related api
     app.post('/users', async (req, res) => {
         const user = req.body;
-        const email = req.query.email;
-        const filter = {email: email};
+        const filter = {email: user.email};
         const exited = await CollectionOfUsers.findOne(filter)
         if(exited){
             res.send({message:'User already exists'});
@@ -134,6 +133,13 @@ async function run() {
         const user = await CollectionOfUsers.findOne(query);
         res.send(user);
     })
+
+    app.delete('/users/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const result = await CollectionOfUsers.deleteOne(query);
+        res.send(result);
+    });
 
 
     // Send a ping to confirm a successful connection
