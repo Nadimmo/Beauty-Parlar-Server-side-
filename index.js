@@ -36,7 +36,7 @@ async function run() {
                 res.status(401).send({ message: "unAuthorize Access" });
             }
             const token = req.headers.authorization.split(' ')[1];
-            console.log(token)
+            // console.log(token)
              jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
                 if (err) {
                     return res.status(403).send({ message: "unAuthorization Access" });
@@ -167,6 +167,33 @@ async function run() {
             const result = await CollectionOfUsers.deleteOne(query);
             res.send(result);
         });
+
+        app.patch('/users/makeAdmin/:id', verifyToken, async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const updateDoc = {
+                $set: {
+                    role: 'admin',
+                },
+            };
+            const result = await CollectionOfUsers.updateOne(query, updateDoc);
+            res.send(result);
+        });
+
+        app.get('/users/makeAdmin/:email', async(req,res)=>{
+            const email = req.params.email;
+            if(email !== req.decoded.email){
+                return res.status(403).send({ message: "forbidden access" });
+            }
+            const filter = { email: email };
+            const user = await CollectionOfUsers.findOne(filter)
+            let admin = false;
+            if(user){
+                admin = user.role === 'admin';
+            }
+            res.send({admin});
+
+        })
 
 
 
