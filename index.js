@@ -25,6 +25,7 @@ async function run() {
     const CollectionOfServices = client.db('BeautyParlarDB').collection('servicesDB');
     const CollectionOfCustomerBooking = client.db('BeautyParlarDB').collection('customerBookingDB');
     const CollectionOfReview = client.db('BeautyParlarDB').collection('reviewDB');
+    const CollectionOfUsers = client.db('BeautyParlarDB').collection('usersDB');
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -106,6 +107,32 @@ async function run() {
     app.get('/reviews', async (req, res) => {
         const reviews = await CollectionOfReview.find().toArray();
         res.send(reviews);
+    })
+
+    //user related api
+    app.post('/users', async (req, res) => {
+        const user = req.body;
+        const email = req.query.email;
+        const filter = {email: email};
+        const exited = await CollectionOfUsers.findOne(filter)
+        if(exited){
+            res.send({message:'User already exists'});
+            return;
+        }
+        const result = await CollectionOfUsers.insertOne(user);
+        res.send(result);
+    });
+
+    app.get('/users', async (req, res) => {
+        const users = await CollectionOfUsers.find().toArray();
+        res.send(users);
+    });
+
+    app.get('/users/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = {_id: new ObjectId(id)};
+        const user = await CollectionOfUsers.findOne(query);
+        res.send(user);
     })
 
 
