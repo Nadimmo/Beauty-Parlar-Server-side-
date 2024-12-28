@@ -52,6 +52,17 @@ async function run() {
                 next()
             })
         }
+
+        const verifyAdmin = async (req,res,next)=>{
+            const email = req.decoded.email;
+            const filter = {email: email}
+            const user = await CollectionOfUsers.findOne(filter)
+            const isAdmin = user?.role === 'admin'
+            if(!isAdmin){
+                return res.status(401).send('unauthorized request')
+            }
+                next()
+        }
         
 
         //services related api
@@ -67,14 +78,14 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/services/:id', async (req, res) => {
+        app.get('/services/:id',  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const service = await CollectionOfServices.findOne(query);
             res.send(service);
         });
 
-        app.delete('/services/:id', async (req, res) => {
+        app.delete('/services/:id',  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await CollectionOfServices.deleteOne(query);
@@ -103,7 +114,7 @@ async function run() {
             res.send(result);
         });
         //show all order list in admin dashboard
-        app.get('/bookingList',   async (req, res) => {
+        app.get('/bookingList', verifyToken, verifyAdmin,  async (req, res) => {
             const customerBooking = await CollectionOfCustomerBooking.find().toArray();
             res.send(customerBooking);
         })
@@ -148,7 +159,7 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/users',  async (req, res) => {
+        app.get('/users', verifyToken, verifyAdmin,  async (req, res) => {
             const users = req.body;
             const result = await CollectionOfUsers.find(users).toArray();
             res.send(result);
@@ -161,14 +172,14 @@ async function run() {
             res.send(user);
         })
 
-        app.delete('/users/:id',   async (req, res) => {
+        app.delete('/users/:id', verifyToken, verifyAdmin,  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await CollectionOfUsers.deleteOne(query);
             res.send(result);
         });
 
-        app.patch('/users/makeAdmin/:id',  async (req, res) => {
+        app.patch('/users/makeAdmin/:id', verifyToken, verifyAdmin,  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const updateDoc = {
@@ -180,19 +191,21 @@ async function run() {
             res.send(result);
         });
         //check admin
-        // app.get('/users/makeAdmin/:email', async(req,res)=>{
-        //     const email = req.params.email;
-        //     if(email !== req.decoded.email){
-        //         return res.status(403).send({message: 'forbidden Access'})
-        //     }
-        //     const filter = {email: email}
-        //     const user = await CollectionOfUsers.findOne(filter)
-        //     let admin = false
-        //     if(user){
-        //         admin = user.role === 'admin'
-        //     }
-        //     res.send({admin})
-        // })
+        app.get("/users/makeAdmin/:email", verifyToken, async (req, res) => {
+            const email = req.params.email;
+            if (email !== req.decoded.email) {
+              return res.status(403).send({ message: "forbidden access" });
+            }
+      
+            const query = { email: email };
+            const user = await CollectionOfUsers.findOne(query);
+            let admin = false;
+            if (user) {
+              admin = user?.role === "admin";
+            }
+            console.log(admin)
+            res.send({ admin });
+          });
       
 
 
