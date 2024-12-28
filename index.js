@@ -28,24 +28,25 @@ async function run() {
     const CollectionOfCustomerBooking = client.db('BeautyParlarDB').collection('customerBookingDB');
     const CollectionOfReview = client.db('BeautyParlarDB').collection('reviewDB');
     const CollectionOfUsers = client.db('BeautyParlarDB').collection('usersDB');
+    const CollectionOfContact = client.db('BeautyParlarDB').collection('contactDB');
     try {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
         //create jwt token
-        app.post('/jwt', async(req,res)=>{
+        app.post('/jwt', async (req, res) => {
             const user = req.body;
-            const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
-            res.send({token})
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
+            res.send({ token })
         })
-       
-        const verifyToken = (req,res,next)=>{
-            if(!req.headers.authorization){
+
+        const verifyToken = (req, res, next) => {
+            if (!req.headers.authorization) {
                 return res.status(401).send('unauthorized request')
             }
             let token = req.headers.authorization.split(' ')[1]
             console.log(token)
             jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-                if(err){
+                if (err) {
                     return res.status(401).send('unauthorized request')
                 }
                 req.decoded = decoded
@@ -53,17 +54,17 @@ async function run() {
             })
         }
 
-        const verifyAdmin = async (req,res,next)=>{
+        const verifyAdmin = async (req, res, next) => {
             const email = req.decoded.email;
-            const filter = {email: email}
+            const filter = { email: email }
             const user = await CollectionOfUsers.findOne(filter)
             const isAdmin = user?.role === 'admin'
-            if(!isAdmin){
+            if (!isAdmin) {
                 return res.status(401).send('unauthorized request')
             }
-                next()
+            next()
         }
-        
+
 
         //services related api
         app.post('/services', async (req, res) => {
@@ -72,27 +73,27 @@ async function run() {
             res.send(result);
         })
 
-        app.get('/services',  async (req, res) => {
+        app.get('/services', async (req, res) => {
             const service = req.body;
             const result = await CollectionOfServices.find(service).toArray();
             res.send(result);
         });
 
-        app.get('/services/:id',  async (req, res) => {
+        app.get('/services/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const service = await CollectionOfServices.findOne(query);
             res.send(service);
         });
 
-        app.delete('/services/:id',  async (req, res) => {
+        app.delete('/services/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await CollectionOfServices.deleteOne(query);
             res.send(result);
         })
 
-        app.patch('/services/:id',   async (req, res) => {
+        app.patch('/services/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const updatedService = req.body;
@@ -114,13 +115,13 @@ async function run() {
             res.send(result);
         });
         //show all order list in admin dashboard
-        app.get('/bookingList', verifyToken, verifyAdmin,  async (req, res) => {
+        app.get('/bookingList', verifyToken, verifyAdmin, async (req, res) => {
             const customerBooking = await CollectionOfCustomerBooking.find().toArray();
             res.send(customerBooking);
         })
 
         //show all booking of a customer
-        app.get('/customerBooking', verifyToken,  async (req, res) => {
+        app.get('/customerBooking', verifyToken, async (req, res) => {
             const booking = req.query.email;
             const filter = { email: booking };
             const result = await CollectionOfCustomerBooking.find(filter).toArray();
@@ -146,6 +147,19 @@ async function run() {
             res.send(result);
         })
 
+        //contact related api
+        app.post('/contact', async (req, res) => {
+            const contact = req.body;
+            const result = await CollectionOfContact.insertOne(contact);
+            res.send(result);
+        })
+
+        app.get('/contact', async (req, res) => {
+            const contact = req.body;
+            const result = await CollectionOfContact.find(contact).toArray()
+            res.send(result)
+        })
+
         //user related api
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -159,7 +173,7 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/users', verifyToken, verifyAdmin,  async (req, res) => {
+        app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
             const users = req.body;
             const result = await CollectionOfUsers.find(users).toArray();
             res.send(result);
@@ -172,14 +186,14 @@ async function run() {
             res.send(user);
         })
 
-        app.delete('/users/:id', verifyToken, verifyAdmin,  async (req, res) => {
+        app.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await CollectionOfUsers.deleteOne(query);
             res.send(result);
         });
 
-        app.patch('/users/makeAdmin/:id', verifyToken, verifyAdmin,  async (req, res) => {
+        app.patch('/users/makeAdmin/:id', verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const updateDoc = {
@@ -194,19 +208,19 @@ async function run() {
         app.get("/users/makeAdmin/:email", verifyToken, async (req, res) => {
             const email = req.params.email;
             if (email !== req.decoded.email) {
-              return res.status(403).send({ message: "forbidden access" });
+                return res.status(403).send({ message: "forbidden access" });
             }
-      
+
             const query = { email: email };
             const user = await CollectionOfUsers.findOne(query);
             let admin = false;
             if (user) {
-              admin = user?.role === "admin";
+                admin = user?.role === "admin";
             }
             console.log(admin)
             res.send({ admin });
-          });
-      
+        });
+
 
 
         // Send a ping to confirm a successful connection
