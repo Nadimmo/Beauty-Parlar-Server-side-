@@ -1,13 +1,14 @@
 const express = require('express')
 const app = express()
 const jwt = require('jsonwebtoken')
-const port = process.env.PORT || 5000;
 const cors = require('cors')
 const dotenv = require('dotenv')
 dotenv.config()
+const port = process.env.PORT || 5000;
 
 app.use(express.json())
-app.use(cors())
+app.use(cors(
+))
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -30,30 +31,28 @@ async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
-        // Establish and verify connection
-        const verifyToken = (req, res, next) => {
-            if (!req.headers.authorization) {
-                res.status(401).send({ message: "unAuthorize Access" });
-            }
-            const token = req.headers.authorization.split(' ')[1];
-            // console.log(token)
-             jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-                if (err) {
-                    return res.status(403).send({ message: "unAuthorization Access" });
-                }
-                req.user = decoded;
-                next();
-            });
-        }
-
-
-
         //create jwt token
-        app.post('/jwt', async (req, res) => {
+        app.post('/jwt', async(req,res)=>{
             const user = req.body;
-            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-            res.send({ token });
+            const token = jwt.sign(user,process.env.ACCESS_TOKEN_SECRET, {expiresIn: '1h'})
+            res.send({token})
         })
+       
+        const verifyToken = (req,res,next)=>{
+            if(!req.headers.authorization){
+                return res.status(401).send('unauthorized request')
+            }
+            let token = req.headers.authorization.split(' ')[1]
+            console.log(token)
+            jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+                if(err){
+                    return res.status(401).send('unauthorized request')
+                }
+                req.decoded = decoded
+                next()
+            })
+        }
+        
 
         //services related api
         app.post('/services', async (req, res) => {
@@ -63,9 +62,9 @@ async function run() {
         })
 
         app.get('/services',  async (req, res) => {
-            const cursor = CollectionOfServices.find({});
-            const services = await cursor.toArray();
-            res.send(services);
+            const service = req.body;
+            const result = await CollectionOfServices.find(service).toArray();
+            res.send(result);
         });
 
         app.get('/services/:id', async (req, res) => {
@@ -75,14 +74,14 @@ async function run() {
             res.send(service);
         });
 
-        app.delete('/services/:id', verifyToken, async (req, res) => {
+        app.delete('/services/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await CollectionOfServices.deleteOne(query);
             res.send(result);
         })
 
-        app.patch('/services/:id', verifyToken, async (req, res) => {
+        app.patch('/services/:id',   async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const updatedService = req.body;
@@ -104,13 +103,13 @@ async function run() {
             res.send(result);
         });
         //show all order list in admin dashboard
-        app.get('/bookingList', verifyToken, async (req, res) => {
+        app.get('/bookingList',   async (req, res) => {
             const customerBooking = await CollectionOfCustomerBooking.find().toArray();
             res.send(customerBooking);
         })
 
         //show all booking of a customer
-        app.get('/customerBooking', verifyToken, async (req, res) => {
+        app.get('/customerBooking', verifyToken,  async (req, res) => {
             const booking = req.query.email;
             const filter = { email: booking };
             const result = await CollectionOfCustomerBooking.find(filter).toArray();
@@ -131,8 +130,9 @@ async function run() {
             res.send(result);
         });
         app.get('/reviews', async (req, res) => {
-            const reviews = await CollectionOfReview.find().toArray();
-            res.send(reviews);
+            const review = req.body;
+            const result = await CollectionOfReview.find(review).toArray();
+            res.send(result);
         })
 
         //user related api
@@ -148,7 +148,7 @@ async function run() {
             res.send(result);
         });
 
-        app.get('/users', verifyToken, async (req, res) => {
+        app.get('/users',  async (req, res) => {
             const users = req.body;
             const result = await CollectionOfUsers.find(users).toArray();
             res.send(result);
@@ -161,14 +161,14 @@ async function run() {
             res.send(user);
         })
 
-        app.delete('/users/:id', verifyToken, async (req, res) => {
+        app.delete('/users/:id',   async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const result = await CollectionOfUsers.deleteOne(query);
             res.send(result);
         });
 
-        app.patch('/users/makeAdmin/:id', verifyToken, async (req, res) => {
+        app.patch('/users/makeAdmin/:id',  async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
             const updateDoc = {
@@ -179,22 +179,21 @@ async function run() {
             const result = await CollectionOfUsers.updateOne(query, updateDoc);
             res.send(result);
         });
-
-        app.get('/users/makeAdmin/:email', async(req,res)=>{
-            const email = req.params.email;
-            if(email !== req.decoded.email){
-                return res.status(403).send({ message: "forbidden access" });
-            }
-            const filter = { email: email };
-            const user = await CollectionOfUsers.findOne(filter)
-            let admin = false;
-            if(user){
-                admin = user.role === 'admin';
-            }
-            res.send({admin});
-
-        })
-
+        //check admin
+        // app.get('/users/makeAdmin/:email', async(req,res)=>{
+        //     const email = req.params.email;
+        //     if(email !== req.decoded.email){
+        //         return res.status(403).send({message: 'forbidden Access'})
+        //     }
+        //     const filter = {email: email}
+        //     const user = await CollectionOfUsers.findOne(filter)
+        //     let admin = false
+        //     if(user){
+        //         admin = user.role === 'admin'
+        //     }
+        //     res.send({admin})
+        // })
+      
 
 
         // Send a ping to confirm a successful connection
