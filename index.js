@@ -243,6 +243,7 @@ async function run() {
                     $in: payment.bookingsId.map(id => new ObjectId(id))
                 }
             }
+
             const result = await CollectionOfCustomerBooking.deleteMany(query)
             res.send({paymentResult, result})
         })
