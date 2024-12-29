@@ -8,8 +8,11 @@ dotenv.config()
 const port = process.env.PORT || 5000;
 
 app.use(express.json())
-app.use(cors(
-))
+app.use(
+    cors({
+        origin: ['https://jerin-server-side.vercel.app'],
+    })
+)
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
