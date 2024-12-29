@@ -30,6 +30,7 @@ async function run() {
     const CollectionOfReview = client.db('BeautyParlarDB').collection('reviewDB');
     const CollectionOfUsers = client.db('BeautyParlarDB').collection('usersDB');
     const CollectionOfContact = client.db('BeautyParlarDB').collection('contactDB');
+    const CollectionOfPayment = client.db('BeautyParlarDB').collection('paymentsDB');
     try {
         // Connect the client to the server	(optional starting in v4.7)
         // await client.connect();
@@ -234,6 +235,27 @@ async function run() {
             res.send({ clientSecret: paymentIntent.client_secret });
         })
 
+        app.post('/payments', async(req,res)=>{
+            const payment = req.body;
+            const paymentResult = await CollectionOfPayment.insertOne(payment)
+            const query = {
+                _id:{
+                    $in: payment.bookingsId.map(id => new ObjectId(id))
+                }
+            }
+            const result = await CollectionOfCustomerBooking.deleteMany(query)
+            res.send({paymentResult, result})
+        })
+
+        app.get("/payments/:email", verifyToken, async (req, res) => {
+            const query = { email: req.params.email };
+            if (req.params.email !== req.decoded.email) {
+              res.status(403).send({ message: "forbidden access" });
+            }
+      
+            const result = await CollectionOfPayment.find(query).toArray();
+            res.send(result);
+          });
 
 
         // Send a ping to confirm a successful connection
