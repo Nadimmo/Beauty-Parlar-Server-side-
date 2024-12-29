@@ -16,7 +16,7 @@ app.use(
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const uri = `mongodb+srv://${process.env.DB_USEr}:${process.env.DB_PASSWORD}@cluster0.rrkijcq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.rrkijcq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -79,8 +79,7 @@ async function run() {
         })
 
         app.get('/services', async (req, res) => {
-            const service = req.body;
-            const result = await CollectionOfServices.find(service).toArray();
+            const result = await CollectionOfServices.find().toArray();
             res.send(result);
         });
 
@@ -147,8 +146,7 @@ async function run() {
             res.send(result);
         });
         app.get('/reviews', async (req, res) => {
-            const review = req.body;
-            const result = await CollectionOfReview.find(review).toArray();
+            const result = await CollectionOfReview.find().toArray();
             res.send(result);
         })
 
@@ -160,8 +158,7 @@ async function run() {
         })
 
         app.get('/contact', async (req, res) => {
-            const contact = req.body;
-            const result = await CollectionOfContact.find(contact).toArray()
+            const result = await CollectionOfContact.find().toArray()
             res.send(result)
         })
 
@@ -179,8 +176,7 @@ async function run() {
         });
 
         app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
-            const users = req.body;
-            const result = await CollectionOfUsers.find(users).toArray();
+            const result = await CollectionOfUsers.find().toArray();
             res.send(result);
         });
 
