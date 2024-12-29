@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 app.use(express.json())
 app.use(
     cors({
-        origin: ['https://jerin-server-side.vercel.app'],
+        origin: ['https://jerin-server-side.vercel.app', 'http://localhost:5173', 'https://beauty-parlour-ten.vercel.app'],
     })
 )
 
